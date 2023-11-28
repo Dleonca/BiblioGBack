@@ -1,9 +1,21 @@
 <?php
 // api_registrar_reserva.php
-
+/*
 header('Access-Control-Allow-Headers: access');
 header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
+header('Content-Type: application/json');*/
+// Permitir solicitudes desde cualquier origen
+header("Access-Control-Allow-Origin: *");
+// Permitir los métodos HTTP especificados
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+// Verificar si la solicitud es OPTIONS (preflight)
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    // Permitir los encabezados solicitados
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    // Respondemos con OK (200) para la solicitud preflight
+    http_response_code(200);
+    exit();
+}
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
@@ -17,8 +29,8 @@ if ($metodo != "POST") {
 define('API_KEY', "e1f602bf73cc96f53c10bb7f7953a438fb7b3c0a");
 $headers = apache_request_headers();
 
-if (isset($headers["authorization"])) {
-    if ($headers["authorization"] == 'e1f602bf73cc96f53c10bb7f7953a438fb7b3c0a') {
+if (isset($headers["Authorization"])) {
+    if ($headers["Authorization"] == 'e1f602bf73cc96f53c10bb7f7953a438fb7b3c0a') {
         $json_data = file_get_contents("php://input");
         $data = json_decode($json_data, true);
 

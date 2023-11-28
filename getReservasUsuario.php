@@ -1,7 +1,7 @@
 <?php
-// api_obtener_reservas.php
-/*
-header('Access-Control-Allow-Headers: access');
+// api_obtener_reserva_por_id.php
+
+/*header('Access-Control-Allow-Headers: access');
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');*/
 // Permitir solicitudes desde cualquier origen
@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     http_response_code(200);
     exit();
 }
-
 $metodo = $_SERVER['REQUEST_METHOD'];
 
 if ($metodo != "GET") {
@@ -33,25 +32,35 @@ if (isset($headers["Authorization"])) {
     if ($headers["Authorization"] == 'e1f602bf73cc96f53c10bb7f7953a438fb7b3c0a') {
         require_once "conexion.php";
 
-        $sql = "SELECT r.id_reserva, r.id_libro, l.titulo as nombre_libro, u.nombre, u.apellidos, u.correo, r.estado
-                FROM reservas r
-                INNER JOIN libros l ON r.id_libro = l.id_libro
-                INNER JOIN usuarios u ON r.id_usuario = u.id
-                where r.estado = 'enviado' ";
+        $url = $_SERVER['REQUEST_URI'];
+        $url_array = explode('/', $url);
+        $id_usuario = end($url_array);
 
-        $st = $con->prepare($sql);
+        if (!empty($id_usuario)) {
+            $sql = "SELECT r.id_reserva, r.id_libro, l.titulo as nombre_libro, u.nombre, u.apellidos, u.correo, r.estado
+                    FROM reservas r
+                    INNER JOIN libros l ON r.id_libro = l.id_libro
+                    INNER JOIN usuarios u ON r.id_usuario = u.id
+                    WHERE r.id_usuario = ?";
 
-        try {
-            $st->execute();
-            $reservas = $st->fetchAll(PDO::FETCH_ASSOC);
+            $st = $con->prepare($sql);
 
-            if ($reservas) {
-                echo json_encode(array("data" => $reservas));
-            } else {
-                echo json_encode(array("mensaje" => "No se encontraron reservas"));
+            try {
+                $st->bindParam(1, $id_usuario, PDO::PARAM_INT);
+                $st->execute();
+                //$reserva = $st->fetch(PDO::FETCH_ASSOC);
+                $reserva = $st->fetchAll(PDO::FETCH_ASSOC);
+
+                if ($reserva) {
+                    echo json_encode(array("data" => $reserva));
+                } else {
+                    echo json_encode(array("mensaje" => "No se encontró la reserva con el ID especificado"));
+                }
+            } catch (PDOException $e) {
+                echo json_encode(array("mensaje" => "Error al obtener la reserva: " . $e->getMessage()));
             }
-        } catch (PDOException $e) {
-            echo json_encode(array("mensaje" => "Error al obtener las reservas: " . $e->getMessage()));
+        } else {
+            echo json_encode(array("mensaje" => "Falta el parámetro 'id_reserva' en la petición"));
         }
     } else {
         http_response_code(400);
